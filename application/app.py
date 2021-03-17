@@ -93,7 +93,7 @@ class Retrieve(Resource):
             return jsonify(retJson)
 
         dat = dataRead(vinyl_id)
-
+        print(dat)
         retJson = {
             "status": 200,
             "obj": dat
@@ -107,7 +107,7 @@ class Save(Resource):
 
         if not recordExists(vinyl_id):
             retJson = {
-                "status": 301,
+                "status": 404,
                 "msg": "Invalid record"
             }
             return jsonify(retJson)
@@ -129,7 +129,7 @@ class Save(Resource):
 
 
         retJson = {
-            "status": 200,
+            "status": 201,
             "msg": "Successful update"
         }
         return jsonify(retJson)
@@ -139,7 +139,7 @@ class Delete(Resource):
     def delete(self, vinyl_id):
         if not recordExists(vinyl_id):
             retJson = {
-                "status": 301,
+                "status": 404,
                 "msg": "Record does'n exists"
             }
             return jsonify(retJson)
