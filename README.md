@@ -1,12 +1,13 @@
 # music_store
 music store
 
-'''cd music_store'''
+## Building
+```cd music_store```
 
-'''docker-compose build'''
+```docker-compose build```
 
 and then
 
-'''docker-compose up'''
+```docker-compose up```
 
 
