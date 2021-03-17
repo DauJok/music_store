@@ -33,14 +33,14 @@ retrieve_put_args.add_argument(
 
 def recordExists(vinyl_id):
     """Checks if vinyl_id already exists in database"""
-    if records.find({"Vinyl_id": vinyl_id}).count() == 0:
+    if records.find({"vinyl_id": vinyl_id}).count() == 0:
         return False
     else:
         return True
 
 
 def dataRead(vinyl_id):
-    return records.find({"Vinyl_id": vinyl_id})
+    return records.find({"vinyl_id": vinyl_id})
 
 # CREATE #
 class Register(Resource):
@@ -55,24 +55,17 @@ class Register(Resource):
 
         # parse posted data
         args = request.get_json()
-        artist = args["artist"]
-        year = args["year"]
-        title = args["title"]
-        price = args["price"]
-        stock = args["stock"]
-        publisher = args["publisher"]
-        description = args["description"]
+        # artist = args["artist"]
+        # year = args["year"]
+        # title = args["title"]
+        # price = args["price"]
+        # stock = args["stock"]
+        # publisher = args["publisher"]
+        # description = args["description"]
 
         # insert record
-        records.insert({
-            "Vinyl_id": vinyl_id,
-            "Artist": artist,
-            "Year": year,
-            "Title": title,
-            "Price": price,
-            "Stock": stock,
-            "Publisher": publisher,
-            "Description": description
+        records.insert_one({
+            args
         })
 
         retJson = {
@@ -124,7 +117,7 @@ class Save(Resource):
                 to_update[k] = v
 
         records.update(
-        {"Vinyl_id": vinyl_id},
+        {"vinyl_id": vinyl_id},
         { '$set': {to_update} })
 
 
@@ -144,7 +137,7 @@ class Delete(Resource):
             }
             return jsonify(retJson)
 
-        records.deleteOne({"Vinyl_id": vinyl_id})
+        records.deleteOne({"vinyl_id": vinyl_id})
 
         retJson = {
             "status": 200,
