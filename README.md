@@ -1,7 +1,6 @@
 # music_store
-music store
 
-## Building
+## Building project
 ```cd music_store```
 
 ```docker-compose build```
