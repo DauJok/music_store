@@ -96,7 +96,7 @@ class Retrieve(Resource):
 
         retJson = {
             "status": 200,
-            "obj": list(dat)
+            "obj": dat
         }
 
         return jsonify(retJson)
