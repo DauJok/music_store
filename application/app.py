@@ -40,7 +40,7 @@ def recordExists(vinyl_id):
 
 
 def dataRead(vinyl_id):
-    return records.find({"vinyl_id": vinyl_id})
+    return [doc for doc in records.find({"vinyl_id": vinyl_id})]
 
 # CREATE #
 class Register(Resource):
@@ -55,17 +55,24 @@ class Register(Resource):
 
         # parse posted data
         args = request.get_json()
-        # artist = args["artist"]
-        # year = args["year"]
-        # title = args["title"]
-        # price = args["price"]
-        # stock = args["stock"]
-        # publisher = args["publisher"]
-        # description = args["description"]
+        artist = args["artist"]
+        year = args["year"]
+        title = args["title"]
+        price = args["price"]
+        stock = args["stock"]
+        publisher = args["publisher"]
+        description = args["description"]
 
         # insert record
         records.insert_one({
-            args
+            "vinyl_id": vinyl_id,
+            "artist": artist,
+            "year": year,
+            "title": title,
+            "price": price,
+            "stock": stock,
+            "publisher": publisher,
+            "description": description
         })
 
         retJson = {
@@ -151,7 +158,7 @@ class Mash(Resource):
     def get(self):
         retJson = {
                 "status": 200,
-                "obj": records.find({})
+                "obj": [ doc for doc in records.find({}) ]
         }
         return jsonify(retJson)
 
