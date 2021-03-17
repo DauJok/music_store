@@ -96,7 +96,7 @@ class Retrieve(Resource):
 
         retJson = {
             "status": 200,
-            "obj": dat
+            "obj": list(dat)
         }
 
         return jsonify(retJson)
@@ -158,7 +158,7 @@ class Mash(Resource):
     def get(self):
         retJson = {
                 "status": 200,
-                "obj": [ doc for doc in records.find({}) ]
+                "obj": [ doc for doc in records.find({}).limit(10) ]
         }
         return jsonify(retJson)
 
