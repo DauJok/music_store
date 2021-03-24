@@ -1,6 +1,8 @@
-# music_store
+# music_store RESTful API
 
 ## Building project
+```git clone```
+
 ```cd music_store```
 
 ```docker-compose build```
@@ -9,7 +11,11 @@ and then
 
 ```docker-compose up```
 
-## PUT
+## Postman documentation
+
+https://documenter.getpostman.com/view/15095074/TzCFirgP
+
+## Sample data
 
 ```
 {
@@ -32,3 +38,9 @@ and then
     "description": "Look up here! I'm in heaven.."
 }
 ```
+
+## Tech stack
+-   Flask 
+-   Docker 
+-   Python 
+-   MongoDB
