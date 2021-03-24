@@ -13,22 +13,22 @@ and then
 
 ```
 {
-    "artist": "John Lennon",
-    "year": 1980,
-    "title": "Double Fantasy",
-    "price": 15.0,
-    "stock": 5,
-    "publisher": "Beatles records",
-    "description": "double trouble"
+    "artist": "Arcade Fire",
+    "year": 2010,
+    "title": "The Suburbs",
+    "price": 31.2,
+    "stock": 1001,
+    "publisher": "Sony Music Entertainment",
+    "description": "Mountains beyond mountains"
 }
 
 {
-    "artist": "Yoko Ono",
-    "year": 1980,
-    "title": "Double Fantasy",
-    "price": 15.0,
-    "stock": 5,
-    "publisher": "Beatles records",
-    "description": "Double Trouble"
+    "artist": "David Bowie",
+    "year": 2016,
+    "title": "Blackstar",
+    "price": 18.6,
+    "stock": 16,
+    "publisher": "Columbia records",
+    "description": "Look up here! I'm in heaven.."
 }
 ```
