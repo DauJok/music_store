@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, request
+from flask import Flask, json, request, Response
 from flask_restful import Api, Resource, reqparse
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 
 app = Flask(__name__)
@@ -29,91 +30,94 @@ retrieve_put_args.add_argument(
     "publisher", type=str, help="Publishing company")
 retrieve_put_args.add_argument(
     "description", type=str, help="Record's description")
+retrieve_put_args.add_argument(
+    "album_id", type=int, help="Album Identificator")
 
-
-def recordExists(vinyl_id):
-    """Checks if vinyl_id already exists in database"""
-    if records.find({"vinyl_id": vinyl_id}).count() == 0:
+def recordExists(artist, year, title):
+    if records.find({ '$and': [{"artist": artist}, {"year": year}, {"title": title}] }).count() == 0:
         return False
     else:
         return True
 
+def dataCheck(album_id):
+    if records.find({'_id': ObjectId(album_id)}).count() == 0:
+        return False
+    return True
 
-def dataRead(vinyl_id):
-    return [doc for doc in records.find({"vinyl_id": vinyl_id})]
+def dataRead(album_id):
+    record = records.find({'_id': ObjectId(album_id)})
+    return [{item: data[item] if item != "_id" else str(data[item]) for item in data} for data in record]
 
 # CREATE #
-class Register(Resource):
-    def put(self, vinyl_id):
-
-        if recordExists(vinyl_id):
-            retJson = {
-                "status": 301,
-                "msg": "Record already exists"
-            }
-            return jsonify(retJson)
-
+class Create(Resource):
+    def post(self):
         # parse posted data
         args = request.get_json()
-        artist = args["artist"]
-        year = args["year"]
-        title = args["title"]
-        price = args["price"]
-        stock = args["stock"]
-        publisher = args["publisher"]
-        description = args["description"]
 
-        # insert record
-        records.insert_one({
-            "vinyl_id": vinyl_id,
-            "artist": artist,
-            "year": year,
-            "title": title,
-            "price": price,
-            "stock": stock,
-            "publisher": publisher,
-            "description": description
-        })
+        if args == {} or args is None:
+            return Response(
+                response=json.dumps({"Error": "No information provided"}),
+                status=400,
+                mimetype="application/json")
 
-        retJson = {
-            "status": 200,
-            "msg": "Successful post"
-        }
-        return jsonify(retJson)
+        if recordExists(args["artist"], args["year"], args["title"]):
+            return Response(
+                response=json.dumps({"Error": "Conflict, album already exists"}),
+                status=409,
+                mimetype="application/json")
+
+        Ins_id = records.insert_one( {item: args[item] for item in args if args[item] is not None} )
+        success = {
+            "Status": "Successfully Created",
+            "Album_ID": str(Ins_id.inserted_id)}
+        return Response(
+            response=json.dumps(success),
+            status=201,
+            mimetype="application/json",
+            headers={"Location":'/albums/{}'.format(Ins_id.inserted_id)} )
 
 # READ #
 class Retrieve(Resource):
-    def get(self, vinyl_id):
-
-        if not recordExists(vinyl_id):
-            retJson = {
-                "status": 301,
-                "msg": "Invalid record"
-            }
-            return jsonify(retJson)
-
-        dat = dataRead(vinyl_id)
-        print(dat)
-        retJson = {
-            "status": 200,
-            "obj": dat
-        }
-
-        return jsonify(retJson)
-
-# UPDATE #
-class Save(Resource):
-    def post(self, vinyl_id):
-
-        if not recordExists(vinyl_id):
-            retJson = {
-                "status": 404,
-                "msg": "Invalid record"
-            }
-            return jsonify(retJson)
-
+    def get(self, album_id):
 
         args = request.get_json()
+
+        if args == {} or args is None and album_id is None:
+            return Response(
+                response=json.dumps({"Error": "No information provided"}),
+                status=400,
+                mimetype="application/json")
+
+        if records.find({'_id': ObjectId(album_id)}).count() == 0:
+            return Response(
+                response=json.dumps({"Error": "Album doesn't exist"}),
+                status=404,
+                mimetype="application/json")
+            
+
+        dat = dataRead(album_id)
+        return Response(
+            response=json.dumps(dat),
+            status=200,
+            mimetype="application/json")
+
+# UPDATE #
+class Update(Resource):
+    def put(self, album_id):
+
+        args = request.get_json()
+
+        if args == {} or args is None:
+            return Response(
+                response=json.dumps({"Error": "No information provided"}),
+                status=400,
+                mimetype="application/json")
+
+        if dataCheck(album_id):
+            return Response(
+                response=json.dumps({"Error": "Album doesn't exist"}),
+                status=404,
+                mimetype="application/json")
 
         to_update = {}
 
@@ -123,50 +127,50 @@ class Save(Resource):
             else:
                 to_update[k] = v
 
-        records.update(
-        {"vinyl_id": vinyl_id},
-        { '$set': {to_update} })
+        Ups_id = records.update_one({'_id': ObjectId(album_id)},
+        { '$set': {item: args[item] for item in args if args[item] is not None or item != "_id"} })
 
+        success = {
+            "Status": "Successfully Updated",
+        return Response(
+            response=json.dumps(success),
+            status=200,
+            mimetype="application/json",
+            headers={"Location":'/albums/{}'.format(album_id)} )
 
-        retJson = {
-            "status": 201,
-            "msg": "Successful update"
-        }
-        return jsonify(retJson)
 
 # DELETE #
 class Delete(Resource):
-    def delete(self, vinyl_id):
-        if not recordExists(vinyl_id):
-            retJson = {
-                "status": 404,
-                "msg": "Record does'n exists"
-            }
-            return jsonify(retJson)
+    def delete(self, album_id):
+        if dataCheck(album_id):
+            return Response(
+                response=json.dumps({"Error": "Album doesn't exist"}),
+                status=404,
+                mimetype="application/json")
 
-        records.deleteOne({"vinyl_id": vinyl_id})
+        records.delete_one({'_id': ObjectId(album_id)})
 
-        retJson = {
-            "status": 200,
-            "msg": "Record deleted successfully"
-        }
-        return jsonify(retJson)
+        return Response(
+            response=json.dumps({"Status": "Successfully Deleted"}),
+            status=200,
+            mimetype="application/json")
 
 
 # GET ALL #
 class Mash(Resource):
     def get(self):
-        retJson = {
-                "status": 200,
-                "obj": [ doc for doc in records.find({}).limit(10) ]
-        }
-        return jsonify(retJson)
+        documents = records.find().limit(5)
+        return Response(
+            response=json.dumps([{item: data[item] if item != "_id" else str(data[item]) for item in data} for data in documents]),
+            status=200,
+            mimetype="application/json")
 
-api.add_resource(Register, "/discs/<int:vinyl_id>")
-api.add_resource(Retrieve, "/discs/<int:vinyl_id>")
-api.add_resource(Save, "/discs/<int:vinyl_id>")
-api.add_resource(Delete, "/discs/<int:vinyl_id>")
-api.add_resource(Mash, "/home")
+
+api.add_resource(Create, "/albums", "/albums/<string:album_id>")
+api.add_resource(Retrieve, "/albums","/albums/<string:album_id>")
+api.add_resource(Update, "/albums", "/albums/<string:album_id>")
+api.add_resource(Delete, "/albums", "/albums/<string:album_id>")
+api.add_resource(Mash, "/catalogue")
 
 
 if __name__ == "__main__":
