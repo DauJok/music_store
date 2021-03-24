@@ -14,6 +14,36 @@ db = client.storeDB
 records = db["Records"]
 
 
+records.insert_many([
+{
+    "artist": "John Lennon",
+    "year": 1980,
+    "title": "Double Fantasy",
+    "price": 15.0,
+    "stock": 5,
+    "publisher": "Beatles records",
+    "description": "double trouble"
+},
+{
+    "artist": "Yoko Ono",
+    "year": 1984,
+    "title": "Milk and Honey",
+    "price": 27.9,
+    "stock": 8000,
+    "publisher": "Capitol Records",
+    "description": "Double Trouble"
+},
+{
+    "artist": "The Beatles",
+    "year": 1969,
+    "title": "Abbey Road",
+    "price": 72.0,
+    "stock": 5,
+    "publisher": "Calderstone Records",
+    "description": "C'est la Vie!"
+}
+])
+
 retrieve_put_args = reqparse.RequestParser()
 
 retrieve_put_args.add_argument(
@@ -30,8 +60,6 @@ retrieve_put_args.add_argument(
     "publisher", type=str, help="Publishing company")
 retrieve_put_args.add_argument(
     "description", type=str, help="Record's description")
-retrieve_put_args.add_argument(
-    "album_id", type=int, help="Album Identificator")
 
 def recordExists(artist, year, title):
     if records.find({ '$and': [{"artist": artist}, {"year": year}, {"title": title}] }).count() == 0:
@@ -70,6 +98,7 @@ class Create(Resource):
         success = {
             "Status": "Successfully Created",
             "Album_ID": str(Ins_id.inserted_id)}
+
         return Response(
             response=json.dumps(success),
             status=201,
@@ -113,27 +142,17 @@ class Update(Resource):
                 status=400,
                 mimetype="application/json")
 
-        if dataCheck(album_id):
+        if not dataCheck(album_id):
             return Response(
                 response=json.dumps({"Error": "Album doesn't exist"}),
                 status=404,
                 mimetype="application/json")
 
-        to_update = {}
-
-        for i, (k,v) in enumerate(args.items()):
-            if v == None:
-                pass
-            else:
-                to_update[k] = v
-
         Ups_id = records.update_one({'_id': ObjectId(album_id)},
         { '$set': {item: args[item] for item in args if args[item] is not None or item != "_id"} })
-
-        success = {
-            "Status": "Successfully Updated",
+            
         return Response(
-            response=json.dumps(success),
+            response=json.dumps({"Status": "Successfully Updated"}),
             status=200,
             mimetype="application/json",
             headers={"Location":'/albums/{}'.format(album_id)} )
@@ -142,7 +161,7 @@ class Update(Resource):
 # DELETE #
 class Delete(Resource):
     def delete(self, album_id):
-        if dataCheck(album_id):
+        if not dataCheck(album_id):
             return Response(
                 response=json.dumps({"Error": "Album doesn't exist"}),
                 status=404,
@@ -159,18 +178,19 @@ class Delete(Resource):
 # GET ALL #
 class Mash(Resource):
     def get(self):
-        documents = records.find().limit(5)
+        documents = records.find().limit(8)
         return Response(
-            response=json.dumps([{item: data[item] if item != "_id" else str(data[item]) for item in data} for data in documents]),
+            response=json.dumps(
+                [{item: data[item] if item != "_id" else str(data[item]) for item in data} for data in documents]),
             status=200,
             mimetype="application/json")
 
 
-api.add_resource(Create, "/albums", "/albums/<string:album_id>")
-api.add_resource(Retrieve, "/albums","/albums/<string:album_id>")
-api.add_resource(Update, "/albums", "/albums/<string:album_id>")
-api.add_resource(Delete, "/albums", "/albums/<string:album_id>")
-api.add_resource(Mash, "/catalogue")
+api.add_resource(Create, "/albums")
+api.add_resource(Retrieve, "/albums/<string:album_id>")
+api.add_resource(Update, "/albums/<string:album_id>")
+api.add_resource(Delete, "/albums/<string:album_id>")
+api.add_resource(Mash, "/albums")
 
 
 if __name__ == "__main__":
